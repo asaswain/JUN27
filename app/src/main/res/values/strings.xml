@@ -1,0 +1,7 @@
+<resources>
+    <string name="app_name">AsaActivity</string>
+    <string name="fishbowl">Fish Bowl</string>
+
+    <string name="action_settings">settings</string>
+    <string name="title_activity_asa">AsaActivity</string>
+</resources>
