@@ -6,7 +6,6 @@ import android.content.Context;
 import android.graphics.Color;
 import android.graphics.PointF;
 import android.util.AttributeSet;
-import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewPropertyAnimator;
@@ -216,9 +215,9 @@ public class WaterLayout extends RelativeLayout {
             rotationAngle += 360f;
         }
 
-        Log.d("old x,y = ", tmpCurrentPoint.x + "," + tmpCurrentPoint.y);
-        Log.d("new x,y = ", xNewCoor + "," + yNewCoor);
-        Log.d("old angle, new angle = ", tmpFish.getFacingAngle() + "," + newAngle);
+        //Log.d("old x,y = ", tmpCurrentPoint.x + "," + tmpCurrentPoint.y);
+        //Log.d("new x,y = ", xNewCoor + "," + yNewCoor);
+        //Log.d("old angle, new angle = ", tmpFish.getFacingAngle() + "," + newAngle);
 
         ViewPropertyAnimator rotationAnimator = tmpFish.animate();
         rotationAnimator.setDuration(ROTATE_DURATION);    //milliseconds
@@ -231,8 +230,7 @@ public class WaterLayout extends RelativeLayout {
                 moveAnimator.setDuration(MOVE_DURATION);    //milliseconds
                 moveAnimator.setInterpolator(new LinearInterpolator());
                 moveAnimator.x(xNewCoor).y(yNewCoor);
-                moveAnimator.start();
-                Log.d("moveto x,y = ", xNewCoor + "," + yNewCoor);
+                //Log.d("moveto x,y = ", xNewCoor + "," + yNewCoor);
                 /* For use with testing pushObject method
                 moveAnimator.setListener(new AnimatorListenerAdapter() {
                     @Override
