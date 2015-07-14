@@ -1,11 +1,15 @@
 package edu.nyu.scps.JUN27;
 
+import android.animation.Animator;
+import android.animation.AnimatorListenerAdapter;
 import android.content.Context;
 import android.graphics.Color;
 import android.graphics.PointF;
 import android.util.AttributeSet;
+import android.util.Log;
+import android.view.MotionEvent;
+import android.view.View;
 import android.view.ViewPropertyAnimator;
-import android.view.animation.AnticipateInterpolator;
 import android.view.animation.LinearInterpolator;
 import android.widget.RelativeLayout;
 
@@ -15,9 +19,17 @@ import java.util.Random;
 public class WaterLayout extends RelativeLayout {
     private ArrayList<FishView> fishViewList = new ArrayList<>();
 
-    private final long ANIMATION_LENGTH = 500L;
+    private final long ANIMATION_LENGTH = 1200L;
+    // Make rotate and move durations total less than animation length to make sure we finish moving fish before starting next animation
+    private final long ROTATE_DURATION = 350L;
+    private final long MOVE_DURATION = 750L;
 
-    private boolean animationRunning = true;
+    private PointF touchPoint;
+
+    // used when testing pushObject method
+    //private int[] xDest = new int[] {20,400,400,20};
+    //private int[] yDest = new int[] {20,20,400,400};
+    //private int destCount = 0;
 
     public WaterLayout(Context context) {
         super(context);
@@ -51,15 +63,26 @@ public class WaterLayout extends RelativeLayout {
 
         setBackgroundColor(Color.BLUE);
 
-        //FishOnTouchListener tmpOnTouchListener = new FishOnTouchListener();
+        touchPoint = null;
+        setOnTouchListener(new OnTouchListener() {
+            @Override
+            public boolean onTouch(View v, MotionEvent event) {
+                switch (event.getAction()) {
+                    case MotionEvent.ACTION_DOWN:
+                        //Put finger's x, y coordinates into touchPoint to make fish go there.
+                        touchPoint = new PointF(event.getX(), event.getY());
+                        return true;    //do nothing
+
+                    default:
+                        return false;
+                }
+            }
+        });
 
         for (int i = 0; i < FISH_COUNT; ++i) {
-            int speed = 5 + i;
-            FishView tmpFish = new FishView(getContext(), fishList[i], speed);
+            FishView tmpFish = new FishView(getContext(), fishList[i]);
             fishViewList.add(tmpFish);
             addView(tmpFish);
-
-            //tmpFish.setOnTouchListener(tmpOnTouchListener);
         }
 
         super.layout(0, 0, getWidth(), getHeight());
@@ -67,14 +90,27 @@ public class WaterLayout extends RelativeLayout {
     }
 
     public void animateObjects() {
-        for (FishView tmpFish : fishViewList) {
 
-            PointF newPoint = getRandCoordinate();
-            PointF currentPoint = tmpFish.getCenterPoint();
-            double distance = Math.hypot(newPoint.x - currentPoint.x, newPoint.y - currentPoint.y);
-            long duration = (long) (tmpFish.getSpeed() * distance);
+        PointF newPoint;
 
-            pushObject(tmpFish, newPoint.x, newPoint.y, duration);
+        if (touchPoint == null) {
+            for (FishView tmpFish : fishViewList) {
+
+                newPoint = getRandCoordinate();
+                //PointF currentPoint = tmpFish.getCenterPoint();
+                //double distance = Math.hypot(newPoint.x - currentPoint.x, newPoint.y - currentPoint.y);
+
+                pushObject(tmpFish, newPoint.x, newPoint.y);
+            }
+
+        } else {
+            newPoint = touchPoint;
+
+            for (FishView tmpFish : fishViewList) {
+                pushObject(tmpFish, newPoint.x, newPoint.y);
+            }
+
+            touchPoint = null;
         }
     }
 
@@ -140,6 +176,10 @@ public class WaterLayout extends RelativeLayout {
     }
 
     private PointF getRandCoordinate() {
+        // testing animation
+        //int xRand = xDest[destCount % 4];
+        //int yRand = yDest[destCount % 4];
+
         Random r = new Random();
         int screenWidth = getWidth();
         int screenHeight = getHeight();
@@ -149,7 +189,7 @@ public class WaterLayout extends RelativeLayout {
         return new PointF(xRand, yRand);
     }
 
-    private void pushObject(final FishView tmpFish, final float xNewCoor, final float yNewCoor, final long duration) {
+    private void pushObject(final FishView tmpFish, final float xNewCoor, final float yNewCoor) {
 
         PointF tmpCurrentPoint = tmpFish.getCenterPoint();
 
@@ -157,51 +197,58 @@ public class WaterLayout extends RelativeLayout {
             tmpCurrentPoint = new PointF(0, 0);
         }
 
-        // I can't figured out how to rotate the fish the correct angle for the new x,y coordinate, so I'm commenting out this code
-         /*
-        float newAngle = (float) Math.toDegrees(Math.atan2(tmpCurrentPoint.y - yNewCoor, tmpCurrentPoint.x - xNewCoor));
-        //float newAngle = (int) (Math.atan2(tmpCurrentPoint.y - yNewCoor, tmpCurrentPoint.x - xNewCoor) * 180 / Math.PI);
+        float distanceX = xNewCoor - tmpCurrentPoint.x;
+        float distanceY = yNewCoor - tmpCurrentPoint.y;
 
-        float rotationAngle = (newAngle) - tmpFish.getFacingAngle();
-        */
+        //3 o'clock is 0 degrees, 12 o'clock is 90 degrees, 6 o'clock is -90 degrees.
+        float newAngle = (float)Math.toDegrees(Math.atan2(-distanceY, distanceX));
 
-        /* I can't use this code because Android Studio wont let me run with a newer API than 16, can't figure out how to run with API 21
-        ObjectAnimator rotateAnim = ObjectAnimator.ofFloat(tmpFish, "rotation", 180);
+        //newAngle is in the range
+        //-180 <= newAngle <= 180
 
-        ObjectAnimator moveAnim = ObjectAnimator.ofObject(
-                WaterLayout.this,
-                "center",   //name of field
-                new PointFEvaluator(),
-                new PointF(tmpCurrentPoint.x, tmpCurrentPoint.y),   //start value
-                new PointF(xNewCoor, yNewCoor)                      //end value
-        );
+        if (newAngle < 0f) {
+            newAngle += 360f;
+        }
 
-        moveAnim.setInterpolator(new LinearInterpolator());
-        moveAnim.setDuration(1000L); //milliseconds, defaults to 300
+        float rotationAngle = tmpFish.getFacingAngle() - newAngle;
 
-        // Sequence the two animations to play one after the other
-        AnimatorSet animatorSet = new AnimatorSet();
-        animatorSet.play(rotateAnim).before(moveAnim);
-        */
+        if (rotationAngle < 0f) {
+            rotationAngle += 360f;
+        }
+
+        Log.d("old x,y = ", tmpCurrentPoint.x + "," + tmpCurrentPoint.y);
+        Log.d("new x,y = ", xNewCoor + "," + yNewCoor);
+        Log.d("old angle, new angle = ", tmpFish.getFacingAngle() + "," + newAngle);
 
         ViewPropertyAnimator rotationAnimator = tmpFish.animate();
-        rotationAnimator.setDuration(duration / 2);    //milliseconds
+        rotationAnimator.setDuration(ROTATE_DURATION);    //milliseconds
         rotationAnimator.setInterpolator(new LinearInterpolator());
 
-        Runnable endAction = new Runnable() {
-            public void run() {
+        rotationAnimator.setListener(new AnimatorListenerAdapter() {
+            @Override
+            public void onAnimationEnd(Animator animation) {
                 ViewPropertyAnimator moveAnimator = tmpFish.animate();
-                moveAnimator.setDuration(duration / 2);    //milliseconds
-                moveAnimator.setInterpolator(new AnticipateInterpolator());
-                moveAnimator.x(xNewCoor).y(yNewCoor).rotationBy(0);
+                moveAnimator.setDuration(MOVE_DURATION);    //milliseconds
+                moveAnimator.setInterpolator(new LinearInterpolator());
+                moveAnimator.x(xNewCoor).y(yNewCoor);
+                moveAnimator.start();
+                Log.d("moveto x,y = ", xNewCoor + "," + yNewCoor);
+                /* For use with testing pushObject method
+                moveAnimator.setListener(new AnimatorListenerAdapter() {
+                    @Override
+                    public void onAnimationEnd(Animator animation) {
+                        destCount += 1;
+                    }
+                });
+                */
+
             }
-        };
+        });
 
-
-        rotationAnimator.x(tmpCurrentPoint.x).y(tmpCurrentPoint.y).rotationBy(90).withEndAction(endAction);
+        rotationAnimator.rotationBy(rotationAngle);
 
         tmpFish.setCenterPoint(xNewCoor, yNewCoor);
-        //tmpFish.setFacingAngle(newAngle);
+        tmpFish.setFacingAngle(newAngle);
     }
 
     public long getANIMATION_LENGTH() {

@@ -1,13 +1,10 @@
 package edu.nyu.scps.JUN27;
 
 import android.content.ComponentName;
-import android.content.Context;
 import android.content.Intent;
-import android.content.pm.PackageManager;
 import android.content.res.Resources;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
-import android.util.DisplayMetrics;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -67,7 +64,6 @@ public class MainActivity extends AppCompatActivity {
         Resources resources = getResources();
 
         final LinearLayout contents = (LinearLayout) findViewById(R.id.contents);
-        DisplayMetrics displayMetrics = resources.getDisplayMetrics();
 
         LinearLayout.LayoutParams layoutParams = new LinearLayout.LayoutParams(
                 ViewGroup.LayoutParams.WRAP_CONTENT, // width
@@ -82,13 +78,9 @@ public class MainActivity extends AppCompatActivity {
 
         for (int i = 0; i < activityNames.length; ++i) {
             Button activityButton = new Button(MainActivity.this);
-            activityButton.setBackgroundColor(R.color.darkgrey);
+            activityButton.setBackgroundColor(resources.getColor(R.color.darkgrey));
             activityButton.setText(buttonNames[i]);
             activityButton.setLayoutParams(layoutParams);
-
-            float scale = getResources().getDisplayMetrics().density;
-            int dpAsPixels = (int) (10*scale + 0.5f);
-
 
             contents.addView(activityButton);
             // set an onClickListener for all the buttons to start
@@ -120,28 +112,6 @@ public class MainActivity extends AppCompatActivity {
                 intent.setComponent(new ComponentName(packageNames[index], packageNames[index] + activityNames[index]));
             }
             startActivity(intent);
-        }
-    }
-
-    /**
-     * Open another app.
-     *
-     * @param context     current Context, like Activity, App, or Service
-     * @param packageName the full package name of the app to open
-     * @return true if likely successful, false if unsuccessful
-     */
-    private static boolean openApp(Context context, String packageName) {
-        PackageManager manager = context.getPackageManager();
-        try {
-            Intent i = manager.getLaunchIntentForPackage(packageName);
-            if (i == null) {
-                throw new PackageManager.NameNotFoundException();
-            }
-            i.addCategory(Intent.CATEGORY_LAUNCHER);
-            context.startActivity(i);
-            return true;
-        } catch (PackageManager.NameNotFoundException e) {
-            return false;
         }
     }
 

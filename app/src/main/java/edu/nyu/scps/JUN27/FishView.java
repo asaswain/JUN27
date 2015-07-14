@@ -14,21 +14,15 @@ public class FishView extends TextView {
     private Bitmap fish1;
     float facingAngle;
     private PointF fishLocation;
-    int speed;
 
-    public FishView(Context context, int fishColor, int fishSpeed) {
+    public FishView(Context context, int fishColor) {
         super(context);
         //setBackgroundColor(Color.TRANSPARENT);
         paint.setColor(Color.BLACK);
         Bitmap tmpFish = BitmapFactory.decodeResource(getResources(), fishColor);
         fish1 = makeTransparent(tmpFish, Color.WHITE);
-        facingAngle = 0;
+        facingAngle = 90;
         fishLocation = null;
-        speed = fishSpeed;
-    }
-
-    public int getSpeed() {
-        return speed;
     }
 
     public float getFacingAngle() {
