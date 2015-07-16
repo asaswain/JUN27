@@ -90,12 +90,9 @@ public class WaterLayout extends RelativeLayout {
 
     public void animateObjects() {
 
-        PointF newPoint;
-
         if (touchPoint == null) {
             for (FishView tmpFish : fishViewList) {
-
-                newPoint = getRandCoordinate();
+                PointF newPoint = getRandCoordinate();
                 //PointF currentPoint = tmpFish.getCenterPoint();
                 //double distance = Math.hypot(newPoint.x - currentPoint.x, newPoint.y - currentPoint.y);
 
@@ -103,8 +100,7 @@ public class WaterLayout extends RelativeLayout {
             }
 
         } else {
-            newPoint = touchPoint;
-
+            PointF newPoint = touchPoint;
             for (FishView tmpFish : fishViewList) {
                 pushObject(tmpFish, newPoint.x, newPoint.y);
             }
